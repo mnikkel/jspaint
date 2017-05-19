@@ -2,10 +2,10 @@ var controls = Object.create(null);
 function createPaint(parent) {
     var canvas = elt("canvas", { width: 500, height: 300 });
     var cx = canvas.getContext("2d");
-    var toolbar = elt("div", { "class": "toolbar" });
+    var toolbar = elt("div", { class: "toolbar" });
     for (var name in controls)
         toolbar.appendChild(controls[name](cx));
-    var panel = elt("div", { "class": "picturepanel" }, canvas);
+    var panel = elt("div", { class: "picturepanel" }, canvas);
     parent.appendChild(elt("div", null, panel, toolbar));
 }
 var tools = Object.create(null);
@@ -23,8 +23,10 @@ controls.tool = function (cx) {
 };
 function relativePos(event, element) {
     var rect = element.getBoundingClientRect();
-    return { x: Math.floor(event.clientX - rect.left),
-        y: Math.floor(event.clientY - rect.top) };
+    return {
+        x: Math.floor(event.clientX - rect.left),
+        y: Math.floor(event.clientY - rect.top)
+    };
 }
 function trackDrag(onMove, onEnd) {
     function end(event) {
@@ -69,8 +71,10 @@ tools.Rectangle = function (event, cx) {
         }
         var mpos = { x: event.pageX, y: event.pageY };
         var r = findRect(pos, mpos);
-        div = elt("div", { style: "width: " + r.width + "px;height: " + r.height + "px;border: 1px solid;position: absolute;top: " + r.top + "px;left: " + r.left + "px",
-            id: "recDiv" });
+        div = elt("div", {
+            style: "width: " + r.width + "px;height: " + r.height + "px;border: 1px solid;position: absolute;top: " + r.top + "px;left: " + r.left + "px",
+            id: "recDiv"
+        });
         document.body.appendChild(div);
     }, function (event) {
         var div = document.getElementById('recDiv');
@@ -85,7 +89,7 @@ tools["Pick color"] = function (event, cx) {
     var pos = relativePos(event, cx.canvas);
     try {
         var colorsArray = cx.getImageData(pos.x, pos.y, 1, 1).data;
-        var colors = { r: colorsArray[0], g: colorsArray[1], b: colorsArray[2] };
+        var colors = { r: colorsArray[0], g: colorsArray[1], b: colorsArray[2], a: colorsArray[3] };
         cx.fillStyle = "rgb(" + colors.r + ", " + colors.g + ", " + colors.b + ")";
         cx.strokeStyle = "rgb(" + colors.r + ", " + colors.g + ", " + colors.b + ")";
     }
@@ -96,6 +100,26 @@ tools["Pick color"] = function (event, cx) {
             throw e;
     }
 };
+tools["Flood fill"] = function (event, cx) {
+    var pos = relativePos(event, cx.canvas);
+    var imgData = cx.getImageData(0, 0, 500, 300).data;
+    var pixels = imgData.length;
+    var imgp = [];
+    for (var i = 0; i < pixels; i += 4) {
+        imgp.push({
+            'r': imgData[i],
+            'g': imgData[i + 1],
+            'b': imgData[i + 2],
+            'a': imgData[i + 3],
+            'checked': false,
+            'connected': false
+        });
+    }
+    imgp[pos.y * 500 + pos.x].connected = true;
+    imgp[pos.y * 500 + pos.x].checked = true;
+};
+function flood(img, pos) {
+}
 controls.color = function (cx) {
     var input = elt("input", { type: "color" });
     input.addEventListener("change", function () {
@@ -220,3 +244,4 @@ function elt(name, attributes) {
     }
     return node;
 }
+//# sourceMappingURL=paint.js.map
